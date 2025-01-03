@@ -26,9 +26,13 @@ def enter():
 
             (is_locked, in_room) = row
             logging.debug(f"is_locked: {is_locked}, in_room: {in_room}")
-            if is_locked == 1 or in_room == 1:
+            if is_locked == 1:
                 cursor.execute(
-                    'INSERT INTO ACCESS_ATTEMPTS (id, accessCard, attemptTime, wasAccepted) VALUES (NULL, ?, CURRENT_TIMESTAMP, ?)', (card_id, 0))
+                    'INSERT INTO ACCESS_ATTEMPTS (id, accessCard, attemptTime, wasAccepted, reason) VALUES (NULL, ?, CURRENT_TIMESTAMP, ?, \'account locked\')', (card_id, 0))
+                return '0'
+            if in_room == 1:
+                cursor.execute(
+                    'INSERT INTO ACCESS_ATTEMPTS (id, accessCard, attemptTime, wasAccepted, reason) VALUES (NULL, ?, CURRENT_TIMESTAMP, ?, \'already in the room\')', (card_id, 0))
                 return '0'
 
             cursor.execute(
