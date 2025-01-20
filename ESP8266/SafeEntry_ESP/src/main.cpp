@@ -11,18 +11,13 @@ void setup() {
     Serial.begin(9600);
 
     WiFi.begin(ssid, password);
-    Serial.println("#Connecting");
     while (WiFi.status() != WL_CONNECTED) {
         delay(500);
-        Serial.print(".");
     }
-    Serial.println("#");
-    Serial.println("#Connected to WiFi");
 }
 
 void loop() {
     if (WiFi.status() != WL_CONNECTED) {
-        Serial.println("#WiFi Disconnected");
         while (true);
     }
 
@@ -36,21 +31,18 @@ void loop() {
 
     int separator = incoming.indexOf("|");
     if (separator == -1) {
-        Serial.println("#" + incoming);
-        Serial.println("#No sep found");
         return;
     }
 
     String command = incoming.substring(0, separator);
+    command.toLowerCase();
     if (!(command == "enter" || command == "exit")) {
-        Serial.println("#Command not supported");
         return;
     }
 
     String cardId = incoming.substring(separator + 1);
     cardId.trim();
     if (cardId == "") {
-        Serial.println("#No cardId");
         return;
     }
 
@@ -65,12 +57,9 @@ void loop() {
     int httpResponseCode = http.GET();
 
     if (httpResponseCode != 200) {
-        Serial.println("#Response " + httpResponseCode);
         return;
     }
 
-    Serial.print("#HTTP Response code: ");
-    Serial.println(httpResponseCode);
     Serial.println(http.getString());
 
     http.end();
