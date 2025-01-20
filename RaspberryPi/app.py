@@ -36,6 +36,8 @@ def enter():
                 'SELECT isLocked, inRoom FROM ACCESS_CARDS WHERE id = ?', (card_id,))
             row = cursor.fetchone()
             if row is None:
+                cursor.execute(
+                    'INSERT INTO ACCESS_ATTEMPTS (id, accessCard, attemptTime, wasAccepted, reason) VALUES (NULL, ?, CURRENT_TIMESTAMP, ?, \'unknown card id\')', (card_id, 0))
                 return '0'
 
             (is_locked, in_room) = row
@@ -86,6 +88,13 @@ def exit():
     except sqlite3.OperationalError as e:
         logging.error(e)
         return '0'
+
+
+@app.route('/error', methods=["POST"])
+def alarm():
+    card_id = str(request.args.get('card'))
+    logging.debug(f"alarm sounded: {card_id}")
+    return '1'
 
 
 @app.route('/api/access_card/<card_id>', methods=["PATCH"])
