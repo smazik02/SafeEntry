@@ -32,17 +32,17 @@
 					<td>
 						<button
 							class="btn btn-danger"
-							hx-delete="/api/access_card/{{access_card[0]}}"
+							hx-delete="/api/access_card/{{access_card.id}}"
 							hx-confirm="Are you sure you want to remove?"
 						>
 							Delete
 						</button>
 					</td>
-					<td>{{access_card[0]}}</td>
+					<td>{{access_card.id}}</td>
 					<td>
 						<input type="checkbox" name="" id="" {{ "checked" if
-						access_card[1] == True }}
-						hx-patch="/api/access_card/{{access_card[0]}}"/>
+						access_card.is_locked == True }}
+						hx-patch="/api/access_card/{{access_card.id}}"/>
 					</td>
 				</tr>
 				{% endfor %} {% endif %}
@@ -88,14 +88,14 @@
 				</tr>
 				{% else %} {% for access_attempt in access_attempts %}
 				<tr>
-					<td>{{access_attempt[1]}}</td>
-					<td>{{access_attempt[2]}}</td>
+					<td>{{access_attempt.access_card}}</td>
+					<td>{{access_attempt.attempt_time}}</td>
 					<td>
 						<input type="checkbox" name="" id="" {{ "checked" if
-						access_attempt[3] == True }} onclick="return false;"
-						disabled />
+						access_attempt.was_accepted == True }} onclick="return
+						false;" disabled />
 					</td>
-					<td>{{access_attempt[4]}}</td>
+					<td>{{access_attempt.reason}}</td>
 				</tr>
 				{% endfor %} {% endif %}
 			</table>
