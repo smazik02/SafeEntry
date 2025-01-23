@@ -1,7 +1,14 @@
+from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Integer, String, Text, Boolean, Column, TIMESTAMP, func
 
 db = SQLAlchemy()
+
+
+class User(UserMixin, db.Model):
+    id = Column(Integer, primary_key=True)
+    username = Column(String, unique=True, nullable=False)
+    password = Column(String, nullable=False)
 
 
 class AccessCard(db.Model):

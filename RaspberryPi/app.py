@@ -1,6 +1,6 @@
-from flask import Flask, request, render_template, make_response
-from database import AccessCard, AccessAttempt, db
-import sqlite3
+from flask import Flask, request, render_template, make_response, redirect, url_for
+from flask_login import LoginManager, login_user, logout_user, current_user
+from database import AccessCard, AccessAttempt, User, db
 import logging
 import os
 
@@ -10,6 +10,10 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + \
     os.path.join(basedir, 'database.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.secret_key = 'TAJNE'
+
+login_manger = LoginManager()
+login_manger.init_app(app)
 
 db.init_app(app)
 with app.app_context():
@@ -18,10 +22,56 @@ with app.app_context():
 
 @app.route('/', methods=['GET'])
 def main_page():
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+    return redirect(url_for('home'))
+
+
+@app.route('/home', methods=['GET'])
+def home():
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+
     access_cards = AccessCard.query.all()
     access_attempts = AccessAttempt.query.all()
 
-    return render_template('index.html', access_cards=access_cards, access_attempts=access_attempts)
+    return render_template('home.html', access_cards=access_cards, access_attempts=access_attempts)
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        user: User = User.query.filter_by(
+            username=request.form.get('username')).first()
+        if user is not None:
+            return "", 400
+
+        new_user = User(username=request.form.get('username'),
+                        password=request.form.get('password'))
+        db.session.add(new_user)
+        db.session.commit()
+        return redirect(url_for('login'))
+
+    return render_template('register.html')
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        user: User = User.query.filter_by(
+            username=request.form.get('username')).first()
+        if user.password != request.form.get('password'):
+            return redirect(url_for('login'))
+        login_user(user)
+        return redirect(url_for('home'))
+
+    return render_template('login.html')
+
+
+@app.route('/logout')
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
 
 
 @app.route('/enter', methods=['GET'])
@@ -83,6 +133,9 @@ def alarm():
 
 @app.route('/api/access_card/<card_id>', methods=['PATCH'])
 def lock_card(card_id):
+    if not current_user.is_authenticated:
+        return "", 403
+
     logging.debug(f'locking/unlocking access card: {card_id}')
 
     access_card: AccessCard = AccessCard.query.get_or_404(card_id)
@@ -95,6 +148,9 @@ def lock_card(card_id):
 
 @app.route('/api/access_card/<card_id>', methods=['DELETE'])
 def delete_card(card_id):
+    if not current_user.is_authenticated:
+        return "", 403
+
     logging.debug(f'removing access card: {card_id}')
 
     deleted_card = AccessCard.query.get_or_404(card_id)
@@ -108,6 +164,9 @@ def delete_card(card_id):
 
 @app.route('/api/access_card/', methods=['POST'])
 def add_card():
+    if not current_user.is_authenticated:
+        return "", 403
+
     logging.debug(f'adding access card')
 
     card_id = request.form.get('ac_code')
@@ -123,6 +182,11 @@ def add_card():
     response = make_response("", 201)
     response.headers['HX-Refresh'] = 'true'
     return response
+
+
+@login_manger.user_loader
+def loader_user(user_id):
+    return User.query.get(int(user_id))
 
 
 if __name__ == '__main__':
