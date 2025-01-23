@@ -16,7 +16,7 @@ with app.app_context():
     db.create_all()
 
 
-@app.route('/', methods=["GET"])
+@app.route('/', methods=['GET'])
 def main_page():
     access_cards = AccessCard.query.all()
     access_attempts = AccessAttempt.query.all()
@@ -24,7 +24,7 @@ def main_page():
     return render_template('index.html', access_cards=access_cards, access_attempts=access_attempts)
 
 
-@app.route('/enter', methods=["GET"])
+@app.route('/enter', methods=['GET'])
 def enter():
     card_id = str(request.args.get('card'))
     logging.debug(f"attempt enter: {card_id}")
@@ -38,7 +38,7 @@ def enter():
         return '0'
 
     logging.debug(
-        f"is_locked: {access_card.is_locked}, in_room: {access_card.in_room}")
+        f'is_locked: {access_card.is_locked}, in_room: {access_card.in_room}')
 
     if access_card.in_room:
         return '0'
@@ -59,10 +59,10 @@ def enter():
     return '1'
 
 
-@app.route('/exit', methods=["GET"])
+@app.route('/exit', methods=['GET'])
 def exit():
     card_id = str(request.args.get('card'))
-    logging.debug(f"attempt exit: {card_id}")
+    logging.debug(f'attempt exit: {card_id}')
 
     access_card: AccessCard = AccessCard.query.get(card_id)
     if access_card is None or access_card.in_room is False:
@@ -74,16 +74,16 @@ def exit():
     return '1'
 
 
-@app.route('/error', methods=["POST"])
+@app.route('/error', methods=['POST'])
 def alarm():
     card_id = str(request.args.get('card'))
-    logging.debug(f"alarm sounded: {card_id}")
+    logging.debug(f'alarm sounded: {card_id}')
     return '1'
 
 
-@app.route('/api/access_card/<card_id>', methods=["PATCH"])
+@app.route('/api/access_card/<card_id>', methods=['PATCH'])
 def lock_card(card_id):
-    logging.debug(f"locking/unlocking access card: {card_id}")
+    logging.debug(f'locking/unlocking access card: {card_id}')
 
     access_card: AccessCard = AccessCard.query.get_or_404(card_id)
     access_card.is_locked = False if access_card.is_locked else True
@@ -93,9 +93,9 @@ def lock_card(card_id):
     return "", 200
 
 
-@app.route('/api/access_card/<card_id>', methods=["DELETE"])
+@app.route('/api/access_card/<card_id>', methods=['DELETE'])
 def delete_card(card_id):
-    logging.debug(f"removing access card: {card_id}")
+    logging.debug(f'removing access card: {card_id}')
 
     deleted_card = AccessCard.query.get_or_404(card_id)
     db.session.delete(deleted_card)
@@ -106,9 +106,9 @@ def delete_card(card_id):
     return response
 
 
-@app.route('/api/access_card/', methods=["POST"])
+@app.route('/api/access_card/', methods=['POST'])
 def add_card():
-    logging.debug(f"adding access card")
+    logging.debug(f'adding access card')
 
     card_id = request.form.get('ac_code')
     is_locked = 1 if request.form.get('ac_locked') == 'on' else 0
